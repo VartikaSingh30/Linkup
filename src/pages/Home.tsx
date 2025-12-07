@@ -45,7 +45,7 @@ export function HomePage() {
       .eq('follower_id', user.id);
 
     const followedIds = followedUsers?.map(f => f.following_id) || [];
-    
+
     // Include both own posts and posts from followed users
     const userIdsToShow = [user.id, ...followedIds];
 
@@ -100,7 +100,7 @@ export function HomePage() {
 
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!user) return null;
-    
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
@@ -165,7 +165,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="w-full max-w-3xl mx-auto px-0 md:px-0 py-0">
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex gap-4 mb-4">
           {userProfile?.profile_image_url ? (

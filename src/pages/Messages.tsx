@@ -88,11 +88,11 @@ export function MessagesPage() {
           if (newMsg.sender_id === user.id || newMsg.receiver_id === user.id) {
             // Reload conversations to update the list
             loadConversations();
-            
+
             // If the message is for the currently selected conversation, add it to messages
-            if (selectedUserId && 
-                ((newMsg.sender_id === user.id && newMsg.receiver_id === selectedUserId) ||
-                 (newMsg.sender_id === selectedUserId && newMsg.receiver_id === user.id))) {
+            if (selectedUserId &&
+              ((newMsg.sender_id === user.id && newMsg.receiver_id === selectedUserId) ||
+                (newMsg.sender_id === selectedUserId && newMsg.receiver_id === user.id))) {
               setMessages((prev) => {
                 // Avoid duplicates
                 if (prev.some(m => m.id === newMsg.id)) return prev;
@@ -147,7 +147,7 @@ export function MessagesPage() {
       messagesData.forEach((msg: any) => {
         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
         userIds.add(otherId);
-        
+
         // Store the last message for each user
         if (!lastMessages.has(otherId)) {
           lastMessages.set(otherId, {
@@ -160,7 +160,7 @@ export function MessagesPage() {
 
     // Fetch profiles for these users
     const conversationMap = new Map<string, Conversation>();
-    
+
     if (userIds.size > 0) {
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -174,7 +174,7 @@ export function MessagesPage() {
             id: profile.id,
             full_name: profile.full_name || 'Unknown User',
             profile_image_url: profile.profile_image_url,
-            last_message: lastMsg?.content.substring(0, 50) + (lastMsg?.content.length > 50 ? '...' : ''),
+            last_message: lastMsg ? (lastMsg.content.substring(0, 50) + (lastMsg.content.length > 50 ? '...' : '')) : '',
           });
         });
       }
@@ -233,7 +233,7 @@ export function MessagesPage() {
           const newMsg = payload.new;
           // Only add if it's between current user and selected user
           if ((newMsg.sender_id === user.id && newMsg.receiver_id === selectedUserId) ||
-              (newMsg.sender_id === selectedUserId && newMsg.receiver_id === user.id)) {
+            (newMsg.sender_id === selectedUserId && newMsg.receiver_id === user.id)) {
             setMessages((prev) => {
               // Avoid duplicates
               if (prev.some(m => m.id === newMsg.id)) return prev;
@@ -268,7 +268,7 @@ export function MessagesPage() {
 
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -277,6 +277,12 @@ export function MessagesPage() {
             }),
           }
         );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Gemini API Error:', errorData);
+          throw new Error(errorData.error?.message || 'API request failed');
+        }
 
         const data = await response.json();
         const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
@@ -304,7 +310,7 @@ export function MessagesPage() {
 
     // Handle regular messages
     if (!user || !selectedUserId) return;
-    
+
     const messageContent = messageText.trim();
     setMessageText('');
     setLoading(true);
@@ -351,7 +357,7 @@ export function MessagesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] flex flex-col md:flex-row gap-0 md:gap-4 max-w-6xl mx-auto px-0 md:px-4 pb-0 md:pb-4 overflow-hidden">
+    <div className="h-[calc(100dvh-140px)] md:h-[calc(100vh-80px)] flex flex-col md:flex-row gap-0 md:gap-4 max-w-6xl mx-auto px-0 md:px-4 pb-0 md:pb-4 overflow-hidden">
       {/* Conversations List - Full width on mobile when no chat selected */}
       <div className={`${selectedUserId ? 'hidden md:block' : 'block'} md:w-64 bg-white md:rounded-lg md:border border-gray-200 overflow-y-auto flex-shrink-0 h-full`}>
         <div className="p-3 md:p-4">
@@ -361,9 +367,8 @@ export function MessagesPage() {
               <button
                 key={conv.id}
                 onClick={() => setSelectedUserId(conv.id)}
-                className={`w-full text-left px-3 md:px-4 py-3 rounded-lg transition ${
-                  selectedUserId === conv.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'hover:bg-gray-50'
-                }`}
+                className={`w-full text-left px-3 md:px-4 py-3 rounded-lg transition ${selectedUserId === conv.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'hover:bg-gray-50'
+                  }`}
               >
                 {conv.isAI ? (
                   <div className="flex items-center gap-3">
@@ -378,8 +383,8 @@ export function MessagesPage() {
                 ) : (
                   <div className="flex items-center gap-3">
                     {conv.profile_image_url ? (
-                      <img 
-                        src={conv.profile_image_url} 
+                      <img
+                        src={conv.profile_image_url}
                         alt={conv.full_name}
                         className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover flex-shrink-0"
                       />
@@ -414,10 +419,10 @@ export function MessagesPage() {
                   aria-label="Back to conversations"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                 </button>
-                
+
                 {selectedUserId === 'ai-assistant' ? (
                   <>
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0">
@@ -431,8 +436,8 @@ export function MessagesPage() {
                 ) : (
                   <>
                     {conversations.find((c) => c.id === selectedUserId)?.profile_image_url ? (
-                      <img 
-                        src={conversations.find((c) => c.id === selectedUserId)?.profile_image_url} 
+                      <img
+                        src={conversations.find((c) => c.id === selectedUserId)?.profile_image_url}
                         alt={conversations.find((c) => c.id === selectedUserId)?.full_name}
                         className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover flex-shrink-0"
                       />
@@ -483,11 +488,10 @@ export function MessagesPage() {
                           key={index}
                           className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} chat-message`}
                         >
-                          <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            msg.role === 'user' 
-                              ? 'bg-indigo-500' 
-                              : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                          }`}>
+                          <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
+                            ? 'bg-indigo-500'
+                            : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                            }`}>
                             {msg.role === 'user' ? (
                               <span className="text-white font-bold text-xs md:text-sm">U</span>
                             ) : (
@@ -496,11 +500,10 @@ export function MessagesPage() {
                           </div>
                           <div className={`flex-1 max-w-[80%] md:max-w-[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
                             <div
-                              className={`px-3 md:px-4 py-2 md:py-2.5 rounded-2xl text-sm md:text-base ${
-                                msg.role === 'user'
-                                  ? 'bg-indigo-600 text-white rounded-tr-none'
-                                  : 'bg-white text-gray-900 rounded-tl-none shadow-sm'
-                              }`}
+                              className={`px-3 md:px-4 py-2 md:py-2.5 rounded-2xl text-sm md:text-base ${msg.role === 'user'
+                                ? 'bg-indigo-600 text-white rounded-tr-none'
+                                : 'bg-white text-gray-900 rounded-tl-none shadow-sm'
+                                }`}
                               dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
                             />
                             <span className="text-xs text-gray-500 mt-1 px-1">
@@ -532,11 +535,10 @@ export function MessagesPage() {
                     className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2 md:py-2.5 rounded-2xl text-sm md:text-base ${
-                        msg.sender_id === user?.id
-                          ? 'bg-indigo-600 text-white rounded-tr-none'
-                          : 'bg-white text-gray-900 rounded-tl-none shadow-sm'
-                      }`}
+                      className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2 md:py-2.5 rounded-2xl text-sm md:text-base ${msg.sender_id === user?.id
+                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                        : 'bg-white text-gray-900 rounded-tl-none shadow-sm'
+                        }`}
                     >
                       <p>{msg.content}</p>
                       <p className="text-xs mt-1 opacity-70">

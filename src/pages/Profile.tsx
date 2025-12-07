@@ -64,7 +64,7 @@ export function ProfilePage() {
   const [education, setEducation] = useState<Education[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'experience' | 'education' | 'skill' | 'certificate' | null>(null);
@@ -72,7 +72,7 @@ export function ProfilePage() {
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
-  
+
   const profileImageRef = useRef<HTMLInputElement>(null);
   const coverImageRef = useRef<HTMLInputElement>(null);
 
@@ -109,7 +109,7 @@ export function ProfilePage() {
         // Profile doesn't exist, create one
         const newProfile = {
           id: user.id,
-          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          full_name: user.email?.split('@')[0] || 'User',
           username: '0302CS' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
           headline: '',
           bio: '',
@@ -118,13 +118,13 @@ export function ProfilePage() {
           company: '',
           avatar_color: '#667eea'
         };
-        
+
         const { data: created, error: createError } = await supabase
           .from('profiles')
           .insert([newProfile])
           .select()
           .single();
-        
+
         if (created) {
           profileData = created;
         } else {
@@ -133,7 +133,7 @@ export function ProfilePage() {
       } else {
         console.error('Error loading profile:', profileResult.error);
       }
-      
+
       if (profileData) {
         setProfile(profileData);
         setFormData(profileData);
@@ -172,7 +172,7 @@ export function ProfilePage() {
         .eq('username', username)
         .neq('id', user?.id || '')
         .single();
-      
+
       setUsernameAvailable(!data);
     } catch (error) {
       setUsernameAvailable(true);
@@ -191,7 +191,7 @@ export function ProfilePage() {
         alert('Username must be at least 3 characters long');
         return;
       }
-      
+
       // Check username availability
       const { data: existingUser } = await supabase
         .from('profiles')
@@ -199,7 +199,7 @@ export function ProfilePage() {
         .eq('username', formData.username)
         .neq('id', user.id)
         .single();
-      
+
       if (existingUser) {
         alert('Username is already taken. Please choose another one.');
         return;
@@ -262,7 +262,7 @@ export function ProfilePage() {
       }
 
       // Upload to Supabase Storage
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -302,7 +302,7 @@ export function ProfilePage() {
     }
   };
 
-  const openModal = (type: 'experience' | 'education' | 'skill') => {
+  const openModal = (type: 'experience' | 'education' | 'skill' | 'certificate') => {
     setModalType(type);
     setShowModal(true);
   };
@@ -893,7 +893,7 @@ function CertificateItem({ certificate, onDelete }: { certificate: Certificate; 
 // Component: Modal
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="text-xl font-bold text-gray-900">{title}</h3>

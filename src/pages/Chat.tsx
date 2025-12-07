@@ -56,7 +56,7 @@ export function ChatPage() {
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -67,6 +67,12 @@ export function ChatPage() {
           })
         }
       );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gemini API Error:', errorData);
+        throw new Error(errorData.error?.message || 'API request failed');
+      }
 
       const data = await response.json();
       const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
@@ -97,9 +103,9 @@ export function ChatPage() {
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit'
     });
   };
 
@@ -146,11 +152,10 @@ export function ChatPage() {
                   key={index}
                   className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} chat-message`}
                 >
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    msg.role === 'user' 
-                      ? 'bg-indigo-500' 
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user'
+                      ? 'bg-indigo-500'
                       : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                  }`}>
+                    }`}>
                     {msg.role === 'user' ? (
                       <span className="text-white font-bold text-sm">U</span>
                     ) : (
@@ -159,11 +164,10 @@ export function ChatPage() {
                   </div>
                   <div className={`flex-1 max-w-[75%] sm:max-w-[70%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
                     <div
-                      className={`px-3 sm:px-4 py-2 sm:py-3 rounded-2xl ${
-                        msg.role === 'user'
+                      className={`px-3 sm:px-4 py-2 sm:py-3 rounded-2xl ${msg.role === 'user'
                           ? 'bg-indigo-600 text-white'
                           : 'bg-gray-100 text-gray-900'
-                      } shadow-sm`}
+                        } shadow-sm`}
                       dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
                     />
                     <span className="text-xs text-gray-500 mt-1 px-1">{formatTime(msg.timestamp)}</span>
